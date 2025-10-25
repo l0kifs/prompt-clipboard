@@ -1,0 +1,203 @@
+{
+    "name": "Git Commit Rules for AI Agents",
+    "version": "1.0.0",
+    "description": "Concise rules for creating quality commits: single responsibility principle, commit messages following Conventional Commits specification, and staging practices",
+    "lastUpdated": "2025-10-25",
+    "format": {
+        "structure": "<type>[optional scope]: <description>\n\n[optional body]\n\n[optional footer(s)]",
+        "subject_length": "≤ 50 characters",
+        "body_line_length": "≤ 72 characters",
+        "rules": [
+            "Use imperative mood (e.g., 'Add' not 'Adding', 'Fix' not 'Fixed')",
+            "Capitalize first word of description",
+            "No period at end of description",
+            "Focus on WHAT and WHY, not just HOW",
+            "Separate subject and body with blank line",
+            "Separate body and footer with blank line"
+        ]
+    },
+    "single_responsibility": {
+        "principle": "One commit = one logical change",
+        "description": "Each commit should address a single concern or solve one specific problem",
+        "rules": [
+            "If changes serve different purposes, split into separate commits",
+            "Unrelated fixes should be in different commits",
+            "Use 'git add -p' for selective staging when needed",
+            "One commit should be revertable without affecting other changes"
+        ],
+        "examples": {
+            "wrong": "fix(api): fix login bug, update docs, refactor utils",
+            "correct": [
+                "fix(api): resolve authentication timeout",
+                "docs(api): update login endpoint documentation",
+                "refactor(utils): simplify token validation logic"
+            ]
+        }
+    },
+    "commit_types": {
+        "feat": {
+            "description": "New feature",
+            "semver": "MINOR",
+            "example": "feat(auth): add password reset functionality"
+        },
+        "fix": {
+            "description": "Bug fix",
+            "semver": "PATCH",
+            "example": "fix(api): handle null response in user endpoint"
+        },
+        "docs": {
+            "description": "Documentation changes",
+            "semver": "NONE",
+            "example": "docs(readme): update installation instructions"
+        },
+        "style": {
+            "description": "Code formatting (no logic changes)",
+            "semver": "NONE",
+            "example": "style: remove trailing whitespace"
+        },
+        "refactor": {
+            "description": "Code restructuring without behavior change",
+            "semver": "NONE",
+            "example": "refactor(utils): simplify date formatting logic"
+        },
+        "perf": {
+            "description": "Performance improvements",
+            "semver": "PATCH",
+            "example": "perf(cache): implement redis caching for queries"
+        },
+        "test": {
+            "description": "Add or update tests",
+            "semver": "NONE",
+            "example": "test(auth): add unit tests for login validation"
+        },
+        "chore": {
+            "description": "Maintenance, dependencies, build config",
+            "semver": "NONE",
+            "example": "chore(deps): update dependencies"
+        },
+        "ci": {
+            "description": "CI/CD configuration changes",
+            "semver": "NONE",
+            "example": "ci(github): add code coverage workflow"
+        },
+        "build": {
+            "description": "Build system changes",
+            "semver": "NONE",
+            "example": "build: update webpack configuration"
+        }
+    },
+    "breaking_changes": {
+        "methods": [
+            "Add '!' after type/scope: feat!: or feat(scope)!: ",
+            "Add footer: BREAKING CHANGE: <description>"
+        ],
+        "example_with_exclamation": "feat(api)!: change response format\n\nBREAKING CHANGE: API response structure changed from array to object",
+        "example_with_footer": "chore!: drop support for Node 6\n\nBREAKING CHANGE: use JavaScript features not available in Node 6",
+        "semver": "MAJOR"
+    },
+    "scope": {
+        "optional": true,
+        "description": "Section of codebase affected",
+        "format": "enclosed in parentheses after type",
+        "examples": [
+            "feat(auth)",
+            "fix(database)",
+            "refactor(utils)"
+        ]
+    },
+    "body": {
+        "optional": true,
+        "description": "Detailed explanation of changes and context",
+        "guidelines": [
+            "Explain what was changed and why",
+            "Describe the problem being solved",
+            "Avoid explaining HOW code works (focus on WHY it's needed)",
+            "Can be multiple paragraphs"
+        ],
+        "example": "The user import dialog now closes automatically after successful import.\n\nPreviously users had to manually close the dialog, which caused confusion\nwhen multiple imports were performed in sequence."
+    },
+    "footer": {
+        "optional": true,
+        "format": "token: value or token #value",
+        "examples": [
+            "Reviewed-by: John Doe",
+            "Refs: #123, #456",
+            "Co-authored-by: Jane Smith",
+            "BREAKING CHANGE: description"
+        ]
+    },
+    "examples": {
+        "simple_feature": {
+            "message": "feat(search): add autocomplete for product names",
+            "description": "Simple feature without body"
+        },
+        "bug_fix_with_scope": {
+            "message": "fix(cart): prevent duplicate items when clicking add quickly",
+            "description": "Bug fix with clear scope"
+        },
+        "detailed_change": {
+            "message": "feat(payment): add support for cryptocurrency payments\n\nImplements Bitcoin and Ethereum payment processing using Stripe API.\nUsers can now select crypto as payment method during checkout.\nPayment verification happens in real-time.",
+            "description": "Feature with detailed body"
+        },
+        "breaking_change_simple": {
+            "message": "feat!: redesign authentication API",
+            "description": "Breaking change with exclamation mark"
+        },
+        "breaking_change_detailed": {
+            "message": "feat(auth)!: switch from JWT to OAuth2\n\nMigrating authentication from JWT tokens to OAuth2 standard.\nThis improves security and enables third-party integrations.\n\nBREAKING CHANGE: all existing tokens are invalidated\nMigration guide: https://docs.example.com/oauth2-migration",
+            "description": "Complex breaking change with migration info"
+        }
+    },
+    "agent_guidelines": {
+        "priority_order": [
+            "1. Verify single responsibility: one commit = one logical change",
+            "2. Determine commit type (feat, fix, etc.)",
+            "3. Identify affected scope (optional but recommended)",
+            "4. Write clear, concise description (≤50 chars)",
+            "5. Add body if context is needed (≤72 chars per line)",
+            "6. Check for breaking changes",
+            "7. Add relevant footers/references"
+        ],
+        "decision_tree": {
+            "is_new_feature": {
+                "yes": "Use 'feat' type",
+                "no": "Proceed to next check"
+            },
+            "is_bug_fix": {
+                "yes": "Use 'fix' type",
+                "no": "Proceed to next check"
+            },
+            "is_non_code_change": {
+                "docs": "Use 'docs' type",
+                "tests": "Use 'test' type",
+                "dependencies": "Use 'chore' type",
+                "other": "Use appropriate type (style, refactor, perf, ci, build)"
+            }
+        },
+        "anti_patterns": [
+            "'fix stuff' - too vague",
+            "'updates' - meaningless",
+            "'Fixed bug in login' - wrong mood (should be 'Fix bug in login')",
+            "'Subject exceeds 50 characters and makes it hard to read' - too long",
+            "'Implementation of new feature with multiple parts' - too broad, split into separate commits",
+            "Mixing multiple unrelated changes in one commit"
+        ],
+        "best_patterns": [
+            "'feat(api): add user profile endpoint'",
+            "'fix(auth): resolve race condition in token refresh'",
+            "'test(utils): add edge case tests for date parser'",
+            "'refactor(database): simplify connection pooling'",
+            "'Clear, specific, concise, lowercase type'"
+        ]
+    },
+    "tools_and_standards": {
+        "specification": "Conventional Commits 1.0.0",
+        "related_to": "Semantic Versioning (SemVer)",
+        "supporting_tools": [
+            "commitlint - validates commit messages",
+            "commitizen - interactive commit prompt",
+            "husky - git hooks for quality checks",
+            "angular-changelog - generates CHANGELOG automatically"
+        ]
+    }
+}
