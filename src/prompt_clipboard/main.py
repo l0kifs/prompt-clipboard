@@ -22,6 +22,7 @@ from prompt_clipboard.config import settings
 from prompt_clipboard.config.logging import logger
 from prompt_clipboard.database import DatabaseManager
 from prompt_clipboard.hotkey import HotkeyManager
+from prompt_clipboard.settings_window import SettingsWindow
 
 
 # Clipboard helper
@@ -33,9 +34,10 @@ def copy_to_clipboard(text):
 
 # Overlay UI
 class Overlay(QWidget):
-    def __init__(self, db_manager):
+    def __init__(self, db_manager, hotkey_manager):
         super().__init__()
         self.db_manager = db_manager
+        self.hotkey_manager = hotkey_manager
         # frameless, always-on-top
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setWindowTitle(settings.app.name)
@@ -47,17 +49,20 @@ class Overlay(QWidget):
         self.list.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
         self.add_btn = QPushButton("Add New Prompt", self)
         self.manage_btn = QPushButton("Manage Prompts", self)
+        self.settings_btn = QPushButton("Settings", self)
         layout = QVBoxLayout(self)
         layout.addWidget(self.search)
         layout.addWidget(self.list)
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.add_btn)
         btn_layout.addWidget(self.manage_btn)
+        btn_layout.addWidget(self.settings_btn)
         layout.addLayout(btn_layout)
         self.search.textChanged.connect(self.on_search)
         self.list.itemActivated.connect(self.on_activate)
         self.add_btn.clicked.connect(self.on_add)
         self.manage_btn.clicked.connect(self.on_manage)
+        self.settings_btn.clicked.connect(self.on_settings)
         self.search.returnPressed.connect(self.on_search_enter)
         self.search.keyPressEvent = self.search_key_press
         self.list.keyPressEvent = self.list_key_press
@@ -126,6 +131,11 @@ class Overlay(QWidget):
         manager = PromptManager(self.db_manager, self)
         manager.exec()
         self.on_search(self.search.text())
+
+    def on_settings(self):
+        settings_window = SettingsWindow(self.db_manager, self)
+        settings_window.hotkey_changed.connect(self.hotkey_manager.update_hotkey)
+        settings_window.exec()
 
     def search_key_press(self, event):
         if event.key() == Qt.Key.Key_Down:
@@ -269,7 +279,12 @@ def main():
     logger.info("Application starting")
     db_manager = DatabaseManager(settings.database.path)
     app = QApplication(sys.argv)
-    overlay = Overlay(db_manager)
+
+    # Get hotkey from settings or use default
+    hotkey_sequence = db_manager.get_setting("hotkey") or "Ctrl+Alt+I"
+    hk = HotkeyManager(hotkey_sequence)
+
+    overlay = Overlay(db_manager, hk)
 
     def show_overlay():
         overlay.show()
@@ -279,7 +294,6 @@ def main():
         overlay.on_search(overlay.search.text())
         overlay.search.setFocus()
 
-    hk = HotkeyManager()
     hk.hotkey_pressed.connect(show_overlay)
     hk.start()
 
