@@ -17,6 +17,14 @@ class Prompt(SQLModel, table=True):
     )
 
 
+class Setting(SQLModel, table=True):
+    key: str = Field(primary_key=True)
+    value: str
+    updated_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
+
+
 class DatabaseManager:
     def __init__(self, db_path):
         self.db_path = db_path
@@ -72,3 +80,19 @@ class DatabaseManager:
     def is_empty(self):
         with Session(self.engine) as session:
             return not session.exec(select(Prompt)).first()
+
+    def get_setting(self, key: str, default: str | None = None) -> str | None:
+        with Session(self.engine) as session:
+            setting = session.get(Setting, key)
+            return setting.value if setting else default
+
+    def set_setting(self, key: str, value: str):
+        with Session(self.engine) as session:
+            setting = session.get(Setting, key)
+            if setting:
+                setting.value = value
+                setting.updated_at = datetime.now(timezone.utc).isoformat()
+            else:
+                setting = Setting(key=key, value=value)
+                session.add(setting)
+            session.commit()
