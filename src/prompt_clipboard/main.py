@@ -41,7 +41,7 @@ class Overlay(QWidget):
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setWindowTitle(settings.app.name)
         self.setMinimumSize(400, 300)  # Set minimum size instead of fixed
-        self.resize(600, 350)  # Set initial size
+        self.resize(900, 525)  # Set initial size
         self.search = QLineEdit(self)
         self.search.setPlaceholderText("Search prompts...")
         self.list = QListWidget(self)

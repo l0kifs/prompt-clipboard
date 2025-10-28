@@ -1,9 +1,46 @@
 [project]
 name = "prompt-clipboard"
 version = "0.1.0"
-description = "A clipboard manager for AI prompts."
+description = "A lightweight cross-platform clipboard manager for AI prompts and text snippets"
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "l0kifs", email = "l0kifs91@gmail.com" }
+]
+maintainers = [
+    { name = "l0kifs", email = "l0kifs91@gmail.com" }
+]
+keywords = [
+    "clipboard",
+    "manager",
+    "prompts",
+    "ai",
+    "snippets",
+    "productivity",
+    "pyside6",
+    "qt",
+    "cross-platform"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business",
+    "Topic :: Utilities",
+    "Topic :: Text Processing",
+    "Topic :: Desktop Environment",
+    "Environment :: X11 Applications :: Qt",
+    "Natural Language :: English",
+]
 dependencies = [
     "pynput>=1.8.1",
     "pyperclip>=1.11.0",
@@ -13,6 +50,13 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "appdirs>=1.4.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/l0kifs/prompt-clipboard"
+Documentation = "https://github.com/l0kifs/prompt-clipboard/blob/main/README.md"
+Repository = "https://github.com/l0kifs/prompt-clipboard.git"
+Issues = "https://github.com/l0kifs/prompt-clipboard/issues"
+Changelog = "https://github.com/l0kifs/prompt-clipboard/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["uv_build>=0.9.0"]
