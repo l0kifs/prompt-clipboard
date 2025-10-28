@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from prompt_clipboard.add_prompt_dialog import AddPromptDialog
+from prompt_clipboard.config.logging import logger
 from prompt_clipboard.database import DatabaseManager
 from prompt_clipboard.edit_prompt_dialog import EditPromptDialog
 
@@ -105,5 +106,14 @@ class PromptManagerWindow(QDialog):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
-            self.db_manager.delete_prompt(prompt_id)
-            self._load_prompts()
+            try:
+                self.db_manager.delete_prompt(prompt_id)
+                logger.info("Prompt deleted via manager", prompt_id=prompt_id)
+                self._load_prompts()
+            except Exception as e:
+                logger.error(
+                    "Failed to delete prompt via manager",
+                    prompt_id=prompt_id,
+                    error=str(e),
+                )
+                QMessageBox.critical(self, "Error", f"Failed to delete prompt: {e}")

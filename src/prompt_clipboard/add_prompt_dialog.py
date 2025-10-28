@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
 )
 
+from prompt_clipboard.config.logging import logger
 from prompt_clipboard.database import DatabaseManager
 
 
@@ -36,7 +37,13 @@ class AddPromptDialog(QDialog):
     def _on_accept(self):
         body = self.body_edit.toPlainText().strip()
         if body:
-            self.db_manager.add_prompt(body)
-            self.accept()
+            try:
+                self.db_manager.add_prompt(body)
+                logger.debug("Prompt added via dialog", body_length=len(body))
+                self.accept()
+            except Exception as e:
+                logger.error("Failed to add prompt via dialog", error=str(e))
+                self.reject()
         else:
+            logger.debug("Empty prompt rejected in dialog")
             self.reject()

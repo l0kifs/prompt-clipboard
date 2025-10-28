@@ -266,9 +266,17 @@ class Overlay(QWidget):
         if data is None:  # Skip separator items
             return
         pid, body = data
-        copy_to_clipboard(body)
-        self.db_manager.increment_usage(pid)
-        self.hide()
+        try:
+            copy_to_clipboard(body)
+            self.db_manager.increment_usage(pid)
+            logger.debug(
+                "Prompt activated and copied to clipboard",
+                prompt_id=pid,
+                body_length=len(body),
+            )
+            self.hide()
+        except Exception as e:
+            logger.error("Failed to activate prompt", prompt_id=pid, error=str(e))
 
     def on_list_enter(self):
         # Use selection_order for the order of copying
@@ -298,8 +306,20 @@ class Overlay(QWidget):
                 self.db_manager.add_prompt_relations(prompt_ids)
 
             if bodies:  # Only copy if there are actual prompts
-                copy_to_clipboard("\n".join(bodies))
-                self.hide()
+                try:
+                    copy_to_clipboard("\n".join(bodies))
+                    logger.info(
+                        "Multiple prompts copied to clipboard",
+                        prompts_count=len(bodies),
+                        total_length=sum(len(b) for b in bodies),
+                    )
+                    self.hide()
+                except Exception as e:
+                    logger.error(
+                        "Failed to copy multiple prompts",
+                        prompts_count=len(bodies),
+                        error=str(e),
+                    )
 
     def on_add(self):
         dialog = AddPromptDialog(self.db_manager, self)
@@ -345,22 +365,40 @@ class Overlay(QWidget):
 
 def main():
     logger.info("Application starting")
-    db_manager = DatabaseManager(settings.database.path)
+
+    try:
+        db_manager = DatabaseManager(settings.database.path)
+    except Exception as e:
+        logger.critical("Failed to initialize database manager", error=str(e))
+        sys.exit(1)
+
     app = QApplication(sys.argv)
 
     # Get hotkey from settings or use default
     hotkey_sequence = db_manager.get_setting("hotkey") or "Ctrl+Alt+I"
-    hk = HotkeyManager(hotkey_sequence)
+    logger.info("Hotkey configured", hotkey=hotkey_sequence)
+
+    try:
+        hk = HotkeyManager(hotkey_sequence)
+    except Exception as e:
+        logger.error(
+            "Failed to initialize hotkey manager", hotkey=hotkey_sequence, error=str(e)
+        )
+        sys.exit(1)
 
     overlay = Overlay(db_manager, hk)
 
     def show_overlay():
-        overlay.show()
-        overlay.activateWindow()
-        overlay.raise_()
-        overlay.search.clear()
-        overlay.on_search(overlay.search.text())
-        overlay.search.setFocus()
+        try:
+            overlay.show()
+            overlay.activateWindow()
+            overlay.raise_()
+            overlay.search.clear()
+            overlay.on_search(overlay.search.text())
+            overlay.search.setFocus()
+            logger.debug("Overlay displayed")
+        except Exception as e:
+            logger.error("Failed to show overlay", error=str(e))
 
     hk.hotkey_pressed.connect(show_overlay)
     hk.start()
@@ -368,7 +406,9 @@ def main():
     # Seed example prompt if DB empty
     if db_manager.is_empty():
         db_manager.add_prompt(settings.app.seed_prompt)
+        logger.info("Database seeded with default prompt")
 
+    logger.info("Application started successfully")
     sys.exit(app.exec())
 
 

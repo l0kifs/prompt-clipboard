@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
 )
 
+from prompt_clipboard.config.logging import logger
 from prompt_clipboard.database import DatabaseManager
 
 
@@ -40,7 +41,21 @@ class EditPromptDialog(QDialog):
     def _on_accept(self):
         body = self.body_edit.toPlainText().strip()
         if body:
-            self.db_manager.update_prompt(self.prompt_id, body)
-            self.accept()
+            try:
+                self.db_manager.update_prompt(self.prompt_id, body)
+                logger.debug(
+                    "Prompt updated via dialog",
+                    prompt_id=self.prompt_id,
+                    body_length=len(body),
+                )
+                self.accept()
+            except Exception as e:
+                logger.error(
+                    "Failed to update prompt via dialog",
+                    prompt_id=self.prompt_id,
+                    error=str(e),
+                )
+                self.reject()
         else:
+            logger.debug("Empty prompt rejected in edit dialog")
             self.reject()
