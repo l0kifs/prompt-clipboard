@@ -57,6 +57,16 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+    
+    - name: Check if tag is on main branch
+      run: |
+        # Check if the tag points to a commit that is in main branch
+        if ! git branch -r --contains ${{ github.ref }} | grep -q 'origin/main'; then
+          echo "Error: Tag ${{ github.ref }} is not on main branch"
+          exit 1
+        fi
     
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -71,6 +81,8 @@ jobs:
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
 ```
+
+**Important:** This workflow includes a branch check to ensure tags are only published from the `main` branch, preventing accidental releases from `develop` or feature branches.
 
 Commit and push this file:
 
@@ -155,20 +167,28 @@ uvx --from ./dist/prompt_clipboard-0.1.1-py3-none-any.whl prompt-clipboard
 
 #### Step 4: Commit and Create Tag
 
+**IMPORTANT:** Always create tags on the `main` branch after merging from `develop`.
+
 ```fish
+# 1. Commit changes to develop
 git add .
 git commit -m "chore: bump version to 0.1.1"
 git push origin develop
 
-# Merge to main if using main branch for releases
+# 2. Merge to main - REQUIRED for publishing
 git checkout main
 git merge develop
 git push origin main
 
-# Create and push tag - this triggers the GitHub Action
-git tag v0.1.1
+# 3. Create and push tag ON MAIN BRANCH
+git tag -a v0.1.1 -m "Release v0.1.1"
 git push origin v0.1.1
+
+# 4. Return to develop
+git checkout develop
 ```
+
+**Why this matters:** The workflow verifies that tags are created on `main` to prevent accidental releases from development branches. If you create a tag on `develop`, the workflow will fail with an error.
 
 **That's it!** The GitHub Action will automatically:
 1. Build the package
@@ -206,25 +226,34 @@ For better security after your first successful publish:
 ### Quick Reference (GitHub Actions Method)
 
 ```fish
-# Update version in pyproject.toml
-# Update CHANGELOG.md
+# 1. Update version in pyproject.toml
+# 2. Update CHANGELOG.md
 
-# Test locally (optional)
+# 3. Test locally (optional but recommended)
 rm -rf dist/ && uv build
 uvx --from ./dist/prompt_clipboard-X.Y.Z-py3-none-any.whl prompt-clipboard
 
-# Commit and tag
+# 4. Commit to develop
 git add .
 git commit -m "chore: bump version to X.Y.Z"
 git push origin develop
+
+# 5. Merge to main (REQUIRED)
 git checkout main
 git merge develop
 git push origin main
-git tag vX.Y.Z
+
+# 6. Create tag ON MAIN (triggers GitHub Actions)
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
 git push origin vX.Y.Z
 
-# Done! GitHub Actions handles the rest
+# 7. Return to develop
+git checkout develop
+
+# Done! GitHub Actions will publish to PyPI
 ```
+
+**Critical:** Always create tags on `main` branch, never on `develop` or feature branches!
 
 ---
 
@@ -383,18 +412,47 @@ Package names on PyPI must:
 - Not conflict with existing packages
 - Follow PEP 508
 
+### "Tag is not on main branch" error
+
+**Cause:** You created a tag on `develop` or another branch instead of `main`.
+
+**Solution:**
+```fish
+# Delete the incorrect tag
+git tag -d vX.Y.Z
+git push --delete origin vX.Y.Z
+
+# Merge to main first
+git checkout main
+git merge develop
+git push origin main
+
+# Recreate tag on main
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+
+# Return to develop
+git checkout develop
+```
+
+### Workflow succeeds but package not on PyPI
+
+Check the workflow logs - the version might already exist on PyPI. PyPI doesn't allow re-uploading the same version.
+
 ---
 
 ## Best Practices
 
-1. **Always test on TestPyPI first** before publishing to main PyPI
-2. **Use semantic versioning** (MAJOR.MINOR.PATCH)
-3. **Update CHANGELOG.md** with all changes
-4. **Tag releases in Git** with version number
-5. **Keep credentials secure** - use project-specific tokens
-6. **Test installation** before announcing
-7. **Create GitHub Release** after successful publish
-8. **Monitor PyPI stats** and user feedback
+1. **Always create tags on `main` branch** - Never tag on `develop` or feature branches
+2. **Merge develop to main before tagging** - Ensure all changes are in main
+3. **Test on TestPyPI first** (optional but recommended for major releases)
+4. **Use semantic versioning** (MAJOR.MINOR.PATCH)
+5. **Update CHANGELOG.md** with all changes before release
+6. **Test build locally** before pushing tags
+7. **Keep credentials secure** - use project-specific tokens
+8. **Test installation** from PyPI after publishing
+9. **Create GitHub Release** after successful publish
+10. **Monitor PyPI stats** and user feedback
 
 ---
 

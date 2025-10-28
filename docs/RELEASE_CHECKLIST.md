@@ -40,12 +40,18 @@ Use this checklist when preparing a new release.
 
 ## Git Operations
 
-- [ ] Commit all changes: `git commit -m "chore: bump version to X.Y.Z"`
+**CRITICAL: Tags must be created on `main` branch only!**
+
+- [ ] Commit all changes to develop: `git commit -m "chore: bump version to X.Y.Z"`
 - [ ] Push to develop: `git push origin develop`
-- [ ] Merge to main: `git checkout main && git merge develop`
+- [ ] Switch to main: `git checkout main`
+- [ ] Merge develop to main: `git merge develop`
 - [ ] Push main: `git push origin main`
-- [ ] Create tag: `git tag vX.Y.Z`
+- [ ] Create tag ON MAIN: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
 - [ ] Push tag: `git push origin vX.Y.Z`
+- [ ] Return to develop: `git checkout develop`
+
+**Why this matters:** The GitHub Actions workflow verifies that tags are on `main` branch. Tags created on `develop` or feature branches will fail the publishing check.
 
 ## Publishing
 
@@ -110,6 +116,30 @@ If issues are discovered after release:
    - Document in issues
    - Fix in next release
 
+### If Tag Was Created on Wrong Branch
+
+If you accidentally created a tag on `develop` instead of `main`:
+
+```fish
+# 1. Delete the incorrect tag
+git tag -d vX.Y.Z
+git push --delete origin vX.Y.Z
+
+# 2. Merge to main
+git checkout main
+git merge develop
+git push origin main
+
+# 3. Recreate tag on main
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+
+# 4. Return to develop
+git checkout develop
+```
+
+**Note:** If the package was already published to PyPI, you cannot re-upload the same version. In this case, you'll need to increment to the next patch version (e.g., 0.1.0 → 0.1.1).
+
 ## Version Numbering
 
 Follow [Semantic Versioning](https://semver.org/):
@@ -120,7 +150,9 @@ Follow [Semantic Versioning](https://semver.org/):
 
 ## Notes
 
+- **Always create tags on `main` branch** - GitHub Actions workflow enforces this
 - Always test installation from PyPI before announcing
 - Keep PyPI credentials secure
 - Document any manual steps required
 - Update this checklist as the process evolves
+- If workflow fails with "tag not on main" error, see Rollback Procedure above
