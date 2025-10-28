@@ -11,6 +11,16 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+    
+    - name: Check if tag is on main branch
+      run: |
+        # Check if the tag points to a commit that is in main branch
+        if ! git branch -r --contains ${{ github.ref }} | grep -q 'origin/main'; then
+          echo "Error: Tag ${{ github.ref }} is not on main branch"
+          exit 1
+        fi
     
     - name: Install uv
       uses: astral-sh/setup-uv@v5
